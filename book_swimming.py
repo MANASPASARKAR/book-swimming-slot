@@ -2,91 +2,67 @@ import asyncio
 import os
 from playwright.async_api import async_playwright
 
-# --- Config from environment variables (GitHub Secrets) ---
 EMAIL = os.environ["LOGIN_EMAIL"]
 PASSWORD = os.environ["LOGIN_PASSWORD"]
-SLOT_URL = "https://sports.mitwpu.edu.in/sports/b4e13520-6b4f-4d88-abb0-03b6bf6650d4/slots/5792a435-0f22-4e76-96e8-0cee9ca393b7/seats"
+
 LOGIN_URL = "https://sports.mitwpu.edu.in/login"
+SLOT_URL = "https://sports.mitwpu.edu.in/sports/b4e13520-6b4f-4d88-abb0-03b6bf6650d4/slots/5792a435-0f22-4e76-96e8-0cee9ca393b7/seats"
 
 async def book_slot():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
+        page = await browser.new_page()
 
         # ── Step 1: Login ──────────────────────────────────────────────
-        print("Navigating to login page...")
-        await page.goto(LOGIN_URL, wait_until="networkidle")
+        print("Going to login page...")
+        await page.goto(LOGIN_URL)
 
-        print("Filling credentials...")
-        await page.fill('input[type="email"], input[name="email"]', EMAIL)
-        await page.fill('input[type="password"], input[name="password"]', PASSWORD)
+        await page.wait_for_selector("#email", state="visible")
+        await page.wait_for_selector("#password", state="visible")
+        print("Login form ready.")
+
+        await page.fill("#email", EMAIL)
+        await page.fill("#password", PASSWORD)
+
+        await page.screenshot(path="debug_before_login.png")
+        print("Filled credentials. Clicking login...")
+
         await page.click('button[type="submit"]')
 
-        await page.wait_for_load_state("networkidle")
-        print(f"Current URL after login: {page.url}")
+        await page.wait_for_url(lambda url: "login" not in url, timeout=15000)
+        print(f"Logged in! URL: {page.url}")
+        await page.screenshot(path="debug_after_login.png")
 
-        # ── Step 2: Go directly to the swimming slot ───────────────────
+        # ── Step 2: Go to swimming slot page ──────────────────────────
         print("Navigating to swimming slot...")
-        await page.goto(SLOT_URL, wait_until="networkidle")
-        await page.wait_for_timeout(2000)  # let seats render
-        print(f"Slot page URL: {page.url}")
+        await page.goto(SLOT_URL)
 
-        # ── Step 3: Click the first available (green) seat ────────────
-        # Try common patterns for green/available seats
-        green_seat_selectors = [
-            ".seat.available",
-            ".seat-available",
-            "[class*='available']",
-            "[class*='green']",
-            "[class*='open']",
-            "button.available",
-            ".slot-seat:not(.booked):not(.disabled)",
-        ]
+        await page.wait_for_selector("button.bg-emerald-500", state="visible", timeout=15000)
+        await page.screenshot(path="debug_seats.png")
+        print("Seats loaded.")
 
-        seat_clicked = False
-        for selector in green_seat_selectors:
-            seats = await page.query_selector_all(selector)
-            if seats:
-                print(f"Found {len(seats)} available seat(s) with selector: {selector}")
-                await seats[0].click()
-                seat_clicked = True
-                print("Clicked first available seat.")
-                await page.wait_for_timeout(1500)
-                break
+        # ── Step 3: Click first available green seat ───────────────────
+        seats = await page.query_selector_all("button.bg-emerald-500")
+        print(f"Found {len(seats)} available seat(s). Clicking first...")
+        await seats[0].click()
 
-        if not seat_clicked:
-            # Fallback: take a screenshot to debug
-            await page.screenshot(path="debug_seats.png")
-            print("ERROR: Could not find any green/available seat. Screenshot saved.")
-            await browser.close()
-            return
+        # Wait for confirm modal
+        await page.wait_for_selector("#terms", state="visible", timeout=10000)
+        await page.screenshot(path="debug_modal.png")
+        print("Modal opened.")
 
-        # ── Step 4: Confirm booking ────────────────────────────────────
-        confirm_selectors = [
-            "button:has-text('Confirm')",
-            "button:has-text('Book')",
-            "button:has-text('Confirm Booking')",
-            "button:has-text('Proceed')",
-            "[class*='confirm']",
-        ]
+        # ── Step 4: Check Terms & Conditions ──────────────────────────
+        await page.click("#terms")
+        await page.wait_for_timeout(800)
+        print("T&C checked.")
 
-        confirmed = False
-        for selector in confirm_selectors:
-            btn = await page.query_selector(selector)
-            if btn:
-                await btn.click()
-                confirmed = True
-                print(f"Clicked confirm button: {selector}")
-                await page.wait_for_timeout(2000)
-                break
+        # ── Step 5: Click Confirm ──────────────────────────────────────
+        confirm_btn = await page.wait_for_selector("button:has-text('Confirm')", state="visible", timeout=5000)
+        await confirm_btn.click()
+        await page.wait_for_timeout(3000)
 
-        if confirmed:
-            await page.screenshot(path="booking_success.png")
-            print("✅ Booking confirmed! Screenshot saved as booking_success.png")
-        else:
-            await page.screenshot(path="debug_confirm.png")
-            print("ERROR: Could not find confirm button. Screenshot saved.")
+        await page.screenshot(path="booking_result.png")
+        print("✅ Swimming slot booked! Check booking_result.png")
 
         await browser.close()
 
