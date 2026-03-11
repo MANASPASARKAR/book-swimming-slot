@@ -1,0 +1,40 @@
+name: Book Swimming Slot
+
+on:
+  schedule:
+    # Runs at 11:30 PM UTC = 5:00 AM IST every day
+    - cron: '30 23 * * *'
+  workflow_dispatch: # Also allows manual trigger from GitHub UI
+
+jobs:
+  book:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run booking script
+        env:
+          LOGIN_EMAIL: ${{ secrets.LOGIN_EMAIL }}
+          LOGIN_PASSWORD: ${{ secrets.LOGIN_PASSWORD }}
+        run: python book_swimming.py
+
+      - name: Upload screenshots (success or debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: booking-screenshots
+          path: "*.png"
+          if-no-files-found: ignore
