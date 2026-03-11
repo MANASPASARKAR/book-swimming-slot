@@ -24,6 +24,7 @@ async def book_slot():
         await page.fill("#email", EMAIL)
         await page.fill("#password", PASSWORD)
 
+        await page.wait_for_timeout(10000)
         await page.screenshot(path="debug_before_login.png")
         print("Filled credentials. Clicking login...")
 
@@ -31,6 +32,7 @@ async def book_slot():
 
         await page.wait_for_url(lambda url: "login" not in url, timeout=15000)
         print(f"Logged in! URL: {page.url}")
+        await page.wait_for_timeout(10000)
         await page.screenshot(path="debug_after_login.png")
 
         # ── Step 2: Go to swimming slot page ──────────────────────────
@@ -38,6 +40,7 @@ async def book_slot():
         await page.goto(SLOT_URL)
 
         await page.wait_for_selector("button.bg-emerald-500", state="visible", timeout=15000)
+        await page.wait_for_timeout(10000)
         await page.screenshot(path="debug_seats.png")
         print("Seats loaded.")
 
@@ -46,21 +49,21 @@ async def book_slot():
         print(f"Found {len(seats)} available seat(s). Clicking first...")
         await seats[0].click()
 
-        # Wait for confirm modal
         await page.wait_for_selector("#terms", state="visible", timeout=10000)
+        await page.wait_for_timeout(10000)
         await page.screenshot(path="debug_modal.png")
         print("Modal opened.")
 
         # ── Step 4: Check Terms & Conditions ──────────────────────────
         await page.click("#terms")
-        await page.wait_for_timeout(800)
+        await page.wait_for_timeout(10000)
         print("T&C checked.")
 
         # ── Step 5: Click Confirm ──────────────────────────────────────
         confirm_btn = await page.wait_for_selector("button:has-text('Confirm')", state="visible", timeout=5000)
         await confirm_btn.click()
-        await page.wait_for_timeout(3000)
 
+        await page.wait_for_timeout(10000)
         await page.screenshot(path="booking_result.png")
         print("✅ Swimming slot booked! Check booking_result.png")
 
