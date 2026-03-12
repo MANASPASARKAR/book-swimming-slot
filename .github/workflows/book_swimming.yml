@@ -3,7 +3,7 @@ name: Book Swimming Slot
 on:
   schedule:
     # 5:30 AM IST = 12:00 AM UTC, Monday to Friday
-    - cron: '0 0 * * 1-5'
+    - cron: '40 23 * * 0-4'
   workflow_dispatch: # Keep this so you can also trigger manually anytime
 
 jobs:
