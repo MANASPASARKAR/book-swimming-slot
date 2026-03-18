@@ -41,45 +41,55 @@ async def book_slot():
             await page.fill("#email", EMAIL)
             await page.fill("#password", PASSWORD)
 
-            await page.wait_for_timeout(10000)
-            await page.screenshot(path="debug_before_login.png")
+            await page.wait_for_timeout(3000)
+            await page.screenshot(path="debug_before_login.png", full_page=True)
             print("Filled credentials. Clicking login...")
 
             await page.click('button[type="submit"]')
             await page.wait_for_url(lambda url: "login" not in url, timeout=15000)
             print(f"Logged in! URL: {page.url}")
-            await page.wait_for_timeout(10000)
-            await page.screenshot(path="debug_after_login.png")
+            await page.wait_for_timeout(3000)
+            await page.screenshot(path="debug_after_login.png", full_page=True)
 
             # ── Step 2: Go to swimming slot page ──────────────────────
             print("Navigating to swimming slot...")
             await page.goto(SLOT_URL)
+            await page.wait_for_timeout(5000)  # let slots render
+            await page.screenshot(path="debug_seats.png", full_page=True)
+            print("Slots page loaded.")
 
-            await page.wait_for_selector("button.bg-emerald-500", state="visible", timeout=15000)
-            await page.wait_for_timeout(10000)
-            await page.screenshot(path="debug_seats.png")
-            print("Seats loaded.")
-
-            # ── Step 3: Click first available green seat ───────────────
+            # ── Step 3: Check if any seats are available ───────────────
             seats = await page.query_selector_all("button.bg-emerald-500")
-            print(f"Found {len(seats)} available seat(s). Clicking first...")
+            print(f"Found {len(seats)} available seat(s).")
+
+            if len(seats) == 0:
+                send_email(
+                    subject="⚠️ Swimming Booking — No Seats Available",
+                    body="The script ran successfully but found no available seats for the 5:00 PM slot. All spots are already booked."
+                )
+                print("No seats available. Exiting.")
+                await browser.close()
+                return
+
+            print("Clicking first available seat...")
             await seats[0].click()
 
+            # ── Step 4: Wait for modal ─────────────────────────────────
             await page.wait_for_selector("#terms", state="visible", timeout=10000)
-            await page.wait_for_timeout(10000)
-            await page.screenshot(path="debug_modal.png")
+            await page.wait_for_timeout(2000)
+            await page.screenshot(path="debug_modal.png", full_page=True)
             print("Modal opened.")
 
-            # ── Step 4: Check Terms & Conditions ──────────────────────
+            # ── Step 5: Check Terms & Conditions ──────────────────────
             await page.click("#terms")
-            await page.wait_for_timeout(10000)
+            await page.wait_for_timeout(1000)
             print("T&C checked.")
 
-            # ── Step 5: Click Confirm ──────────────────────────────────
+            # ── Step 6: Click Confirm ──────────────────────────────────
             confirm_btn = await page.wait_for_selector("button:has-text('Confirm')", state="visible", timeout=5000)
             await confirm_btn.click()
-            await page.wait_for_timeout(10000)
-            await page.screenshot(path="booking_result.png")
+            await page.wait_for_timeout(3000)
+            await page.screenshot(path="booking_result.png", full_page=True)
             print("✅ Swimming slot booked!")
 
             send_email(
@@ -89,7 +99,7 @@ async def book_slot():
 
         except Exception as e:
             print(f"ERROR: {e}")
-            await page.screenshot(path="debug_error.png")
+            await page.screenshot(path="debug_error.png", full_page=True)
 
             send_email(
                 subject="❌ Swimming Booking Failed",
@@ -98,4 +108,4 @@ async def book_slot():
 
         await browser.close()
 
-asyncio.run(book_slot())
+asyncio.run(book_slot())            
