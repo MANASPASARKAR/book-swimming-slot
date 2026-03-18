@@ -55,6 +55,8 @@ async def book_slot():
             print("Navigating to swimming slot...")
             await page.goto(SLOT_URL)
             await page.wait_for_timeout(5000)  # let slots render
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            await page.wait_for_timeout(2000)
             await page.screenshot(path="debug_seats.png", full_page=True)
             print("Slots page loaded.")
 
