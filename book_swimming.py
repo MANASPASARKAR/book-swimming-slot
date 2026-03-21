@@ -1,7 +1,6 @@
 import asyncio
 import os
-import smtplib
-from email.mime.text import MIMEText
+import resend
 from playwright.async_api import async_playwright
 
 EMAIL = os.environ["LOGIN_EMAIL"]
@@ -13,16 +12,15 @@ RECEIVER_EMAIL = os.environ["RECEIVER_EMAIL"]
 LOGIN_URL = "https://sports.mitwpu.edu.in/login"
 SLOT_URL = "https://sports.mitwpu.edu.in/sports/b4e13520-6b4f-4d88-abb0-03b6bf6650d4/slots/5792a435-0f22-4e76-96e8-0cee9ca393b7/seats"
 
-def send_email(subject, body):
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = RECEIVER_EMAIL
+resend.api_key =  "re_XySPLEDJ_7b9APNmef3YVhLGYqCcWPGtR"
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
-        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
-    print(f"Email sent: {subject}")
+def send_email():
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": "impasarkarmanas@gmail.com",
+        "subject": "Swimming Slot Booked ✅",
+        "html": "<p>Your swimming slot has been booked successfully.</p>"
+    })
 
 async def book_slot():
     async with async_playwright() as p:
