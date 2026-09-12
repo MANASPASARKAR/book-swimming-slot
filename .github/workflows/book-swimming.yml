@@ -2,9 +2,9 @@ name: Book Swimming Slot
 
 on:
   schedule:
-    # 11:00 PM UTC Sunday-Thursday
-    # = ~4:30 AM IST Monday-Friday
-    - cron: "0 23 * * 0-4"
+    # 6:30 AM IST, Monday-Friday
+    # 1:00 AM UTC, Monday-Friday
+    - cron: "0 1 * * 1-5"
 
   workflow_dispatch:
 
@@ -26,6 +26,8 @@ jobs:
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           SENDER_APP_PASSWORD: ${{ secrets.SENDER_APP_PASSWORD }}
           RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+
         run: |
           docker run --rm \
             -e LOGIN_EMAIL="$LOGIN_EMAIL" \
@@ -33,18 +35,8 @@ jobs:
             -e SENDER_EMAIL="$SENDER_EMAIL" \
             -e SENDER_APP_PASSWORD="$SENDER_APP_PASSWORD" \
             -e RECEIVER_EMAIL="$RECEIVER_EMAIL" \
+            -e RESEND_API_KEY="$RESEND_API_KEY" \
             swimming-booker
-
-      - name: Copy screenshots from container
-        if: always()
-        run: |
-          docker run --name swimming-debug \
-            -e LOGIN_EMAIL="${{ secrets.LOGIN_EMAIL }}" \
-            -e LOGIN_PASSWORD="${{ secrets.LOGIN_PASSWORD }}" \
-            -e SENDER_EMAIL="${{ secrets.SENDER_EMAIL }}" \
-            -e SENDER_APP_PASSWORD="${{ secrets.SENDER_APP_PASSWORD }}" \
-            -e RECEIVER_EMAIL="${{ secrets.RECEIVER_EMAIL }}" \
-            swimming-booker || true
 
           docker cp swimming-debug:/app/. ./screenshots/ 2>/dev/null || true
           docker rm swimming-debug || true
