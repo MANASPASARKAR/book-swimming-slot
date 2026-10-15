@@ -1,11 +1,6 @@
 name: Book Swimming Slot
 
 on:
-  schedule:
-    # 6:30 AM IST, Monday-Friday
-    # 1:00 AM UTC, Monday-Friday
-    - cron: "0 1 * * 1-5"
-
   workflow_dispatch:
 
 jobs:
