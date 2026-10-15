@@ -29,7 +29,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
         run: |
-          docker run --rm \
+          docker run --name swimming-debug \
             -e LOGIN_EMAIL="$LOGIN_EMAIL" \
             -e LOGIN_PASSWORD="$LOGIN_PASSWORD" \
             -e SENDER_EMAIL="$SENDER_EMAIL" \
@@ -38,8 +38,8 @@ jobs:
             -e RESEND_API_KEY="$RESEND_API_KEY" \
             swimming-booker
 
-          docker cp swimming-debug:/app/. ./screenshots/ 2>/dev/null || true
-          docker rm swimming-debug || true
+          docker cp swimming-debug:/app/. ./screenshots/ || true
+          docker rm -f swimming-debug || true
 
       - name: Upload screenshots
         if: always()
