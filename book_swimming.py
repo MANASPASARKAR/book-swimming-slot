@@ -10,7 +10,8 @@ SENDER_APP_PASSWORD = os.environ["SENDER_APP_PASSWORD"]
 RECEIVER_EMAIL = os.environ["RECEIVER_EMAIL"]
 
 LOGIN_URL = "https://sports.mitwpu.edu.in/login"
-SLOT_URL = "https://sports.mitwpu.edu.in/sports/b4e13520-6b4f-4d88-abb0-03b6bf6650d4/slots/5792a435-0f22-4e76-96e8-0cee9ca393b7/seats"
+# SLOT_URL = "https://sports.mitwpu.edu.in/sports/b4e13520-6b4f-4d88-abb0-03b6bf6650d4/slots/5792a435-0f22-4e76-96e8-0cee9ca393b7/seats"  # 5PM
+SLOT_URL = "https://sports.mitwpu.edu.in/sports/b4e13520-6b4f-4d88-abb0-03b6bf6650d4/slots/a3dbe858-90f8-4d1d-ae41-f426e138e3c7/seats" # 2PM
 
 resend.api_key = os.environ["RESEND_API_KEY"]
 
